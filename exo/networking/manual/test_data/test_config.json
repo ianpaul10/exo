@@ -1,0 +1,24 @@
+{
+  "peers": {
+    "node1": {
+      "address": "localhost",
+      "port": 50051,
+      "device_capabilities": {
+        "model": "MacBook Pro",
+        "chip": "Apple M2",
+        "memory": 16384,
+        "flops": { "fp32": 3.55, "fp16": 7.1, "int8": 14.2 }
+      }
+    },
+    "node2": {
+      "address": "localhost",
+      "port": 50052,
+      "device_capabilities": {
+        "model": "MacBook Air",
+        "chip": "Apple M2",
+        "memory": 16384,
+        "flops": { "fp32": 3.55, "fp16": 7.1, "int8": 14.2 }
+      }
+    }
+  }
+}

@@ -55,8 +55,13 @@ class GRPCPeerHandle(PeerHandle):
       response = await asyncio.wait_for(self.stub.HealthCheck(request), timeout=5)
       return response.is_healthy
     except asyncio.TimeoutError:
+      print(f"healh check timeout for {self._id}@{self.address}.")
       return False
-    except:
+    except Exception as e:
+      print(f"Health check failed for {self._id}@{self.address}.")
+      print(e)
+      import traceback
+      traceback.print_exc()
       if DEBUG >= 4:
         print(f"Health check failed for {self._id}@{self.address}.")
         import traceback
