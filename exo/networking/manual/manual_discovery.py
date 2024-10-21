@@ -5,7 +5,7 @@ from typing import Dict, List, Callable
 from exo.topology.device_capabilities import DeviceCapabilities
 from exo.networking.manual.network_topology_config import NetworkTopology, PeerConfig
 from exo.helpers import DEBUG_DISCOVERY
-from ..peer_handle import PeerHandle
+from exo.networking.peer_handle import PeerHandle
 
 
 class ManualDiscovery(Discovery):
@@ -14,13 +14,11 @@ class ManualDiscovery(Discovery):
     network_config_path: str,
     node_id: str,
     create_peer_handle: Callable[[str, str, DeviceCapabilities], PeerHandle],
-    broadcast_interval: int = 1,
     discovery_timeout: int = 30,
   ):
     self.topology = NetworkTopology.from_path(network_config_path)
     self.node_id = node_id
     self.create_peer_handle = create_peer_handle
-    self.broadcast_interval = broadcast_interval
     self.discovery_timeout = discovery_timeout
 
     try:
@@ -73,4 +71,4 @@ class ManualDiscovery(Discovery):
 
         if DEBUG_DISCOVERY >= 2: print(f"Current known peers: {[peer.id() for peer in self.known_peers.values()]}")
 
-      await asyncio.sleep(self.broadcast_interval)
+      await asyncio.sleep(self.discovery_timeout)

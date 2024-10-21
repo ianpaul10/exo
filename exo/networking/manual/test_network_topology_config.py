@@ -17,21 +17,30 @@ class TestNetworkTopologyConfig(unittest.TestCase):
     self.assertEqual(e.exception.args[0], "Error decoding JSON data from ./exo/networking/manual/test_data/invalid_json.json: Expecting value: line 1 column 1 (char 0): line 1 column 1 (char 0)")
 
   def test_from_path_invalid_config(self):
-    with self.assertRaises(TypeError) as e:
+    with self.assertRaises(KeyError) as e:
       NetworkTopology.from_path(root_path + "invalid_config.json")
-    self.assertEqual(
-      e.exception.args[0], "Error parsing networking config from ./exo/networking/manual/test_data/invalid_config.json: NetworkTopology.__init__() got an unexpected keyword argument 'not_peers'"
-    )
+    self.assertEqual(e.exception.args[0], "Missing required key in config file: 'port'")
 
   def test_from_path_valid(self):
     config = NetworkTopology.from_path(root_path + "test_config.json")
-    self.assertEqual(
-      config.peers,
-      {
-        "node1": {"address": "localhost", "port": 50051, "device_capabilities": {"model": "Unknown Model", "chip": "Unknown Chip", "memory": 0, "flops": {"fp32": 0, "fp16": 0, "int8": 0}}},
-        "node2": {"address": "localhost", "port": 50052, "device_capabilities": {"model": "Unknown Model", "chip": "Unknown Chip", "memory": 0, "flops": {"fp32": 0, "fp16": 0, "int8": 0}}},
-      },
-    )
+
+    self.assertEqual(config.peers["node1"].port, 50051)
+    self.assertEqual(config.peers["node1"].device_capabilities.model, "Unknown Model")
+    self.assertEqual(config.peers["node1"].address, "localhost")
+    self.assertEqual(config.peers["node1"].device_capabilities.chip, "Unknown Chip")
+    self.assertEqual(config.peers["node1"].device_capabilities.memory, 0)
+    self.assertEqual(config.peers["node1"].device_capabilities.flops.fp32, 0)
+    self.assertEqual(config.peers["node1"].device_capabilities.flops.fp16, 0)
+    self.assertEqual(config.peers["node1"].device_capabilities.flops.int8, 0)
+
+    self.assertEqual(config.peers["node2"].port, 50052)
+    self.assertEqual(config.peers["node2"].device_capabilities.model, "Unknown Model")
+    self.assertEqual(config.peers["node2"].address, "localhost")
+    self.assertEqual(config.peers["node2"].device_capabilities.chip, "Unknown Chip")
+    self.assertEqual(config.peers["node2"].device_capabilities.memory, 0)
+    self.assertEqual(config.peers["node2"].device_capabilities.flops.fp32, 0)
+    self.assertEqual(config.peers["node2"].device_capabilities.flops.fp16, 0)
+    self.assertEqual(config.peers["node2"].device_capabilities.flops.int8, 0)
 
 
 if __name__ == "__main__":

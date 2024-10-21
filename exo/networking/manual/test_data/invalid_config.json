@@ -1,8 +1,7 @@
 {
-  "not_peers": {
+  "peers": {
     "node1": {
       "address": "localhost",
-      "port": 50051,
       "device_capabilities": {
         "model": "Unknown Model",
         "chip": "Unknown Chip",

@@ -34,8 +34,8 @@ class NetworkTopology:
 
     try:
       peers = {}
-      for node_id, peer_data in config.get("peers", {}).items():
-        device_capabilities = DeviceCapabilities(**peer_data.get("device_capabilities", {}))
+      for node_id, peer_data in config["peers"].items():
+        device_capabilities = DeviceCapabilities(**peer_data["device_capabilities"])
         peer_config = PeerConfig(address=peer_data["address"], port=peer_data["port"], device_capabilities=device_capabilities)
         peers[node_id] = peer_config
 
