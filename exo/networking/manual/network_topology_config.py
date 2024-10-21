@@ -33,7 +33,15 @@ class NetworkTopology:
       raise json.JSONDecodeError(f"Error decoding JSON data from {path}: {e}", e.doc, e.pos)
 
     try:
-      networking_config = cls(**config)
+      peers = {}
+      for node_id, peer_data in config.get("peers", {}).items():
+        device_capabilities = DeviceCapabilities(**peer_data.get("device_capabilities", {}))
+        peer_config = PeerConfig(address=peer_data["address"], port=peer_data["port"], device_capabilities=device_capabilities)
+        peers[node_id] = peer_config
+
+      networking_config = cls(peers=peers)
+    except KeyError as e:
+      raise KeyError(f"Missing required key in config file: {e}")
     except TypeError as e:
       raise TypeError(f"Error parsing networking config from {path}: {e}")
 

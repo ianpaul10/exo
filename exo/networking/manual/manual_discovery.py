@@ -46,25 +46,30 @@ class ManualDiscovery(Discovery):
       self.listen_task.cancel()
 
   async def discover_peers(self, wait_for_peers: int = 0) -> List[PeerHandle]:
+    if DEBUG_DISCOVERY >= 2: print(f"Starting discovery...")
     if wait_for_peers > 0:
       while len(self.known_peers) < wait_for_peers:
-        if DEBUG_DISCOVERY >= 2:
-          print(f"Current peers: {len(self.known_peers)}/{wait_for_peers}. Waiting for more peers...")
+        if DEBUG_DISCOVERY >= 2: print(f"Current peers: {len(self.known_peers)}/{wait_for_peers}. Waiting for more peers...")
         await asyncio.sleep(0.1)
     return list(self.known_peers.values())
 
   async def task_find_peers_from_config(self):
+    if DEBUG_DISCOVERY >= 2: print(f"Starting task_find_peers_from_config...")
     while True:
       for peer_id, peer_config in self.peers_in_network.items():
+        if DEBUG_DISCOVERY >= 2: print(f"Checking peer {peer_id=} at {peer_config.address}:{peer_config.port}")
         peer = self.known_peers.get(peer_id)
         if not peer:
+          if DEBUG_DISCOVERY >= 2: print(f"{peer_id=} not found in known peers. Adding.")
           new_peer_handle = self.create_peer_handle(peer_id, peer_config.address, peer_config.device_capabilities)
-          if not await new_peer_handle.health_check():
-            if DEBUG >= 1:
-              print(f"{peer_id=} at {peer_config.address} not healthy.")
-            continue
+          print(new_peer_handle)
           self.known_peers[peer_id] = new_peer_handle
         elif peer and not await peer.health_check():
-          if DEBUG >= 1:
-            print(f"{peer_id=} at {peer_config.address} not healthy. Removing.")
+          if DEBUG >= 1: print(f"{peer_id=} at {peer_config.address} not healthy. Removing.")
           del self.known_peers[peer_id]
+        else:
+          if DEBUG >= 1: print(f"{peer_id=} at {peer_config.address} is healthy.")
+
+      print(self.known_peers)
+
+      await asyncio.sleep(self.broadcast_interval)
