@@ -2,9 +2,9 @@ import asyncio
 from exo.networking.discovery import Discovery
 from typing import Dict, List, Callable
 
-from exo.topology.device_capabilities import DeviceCapabilities, UNKNOWN_DEVICE_CAPABILITIES
+from exo.topology.device_capabilities import DeviceCapabilities
 from exo.networking.manual.network_topology_config import NetworkTopology, PeerConfig
-from exo.helpers import DEBUG_DISCOVERY, DEBUG
+from exo.helpers import DEBUG_DISCOVERY
 from ..peer_handle import PeerHandle
 
 
@@ -46,7 +46,7 @@ class ManualDiscovery(Discovery):
       self.listen_task.cancel()
 
   async def discover_peers(self, wait_for_peers: int = 0) -> List[PeerHandle]:
-    if DEBUG_DISCOVERY >= 2: print(f"Starting discovery...")
+    if DEBUG_DISCOVERY >= 2: print("Starting discovery...")
     if wait_for_peers > 0:
       while len(self.known_peers) < wait_for_peers:
         if DEBUG_DISCOVERY >= 2: print(f"Current peers: {len(self.known_peers)}/{wait_for_peers}. Waiting for more peers...")
@@ -54,22 +54,23 @@ class ManualDiscovery(Discovery):
     return list(self.known_peers.values())
 
   async def task_find_peers_from_config(self):
-    if DEBUG_DISCOVERY >= 2: print(f"Starting task_find_peers_from_config...")
+    if DEBUG_DISCOVERY >= 2: print("Starting task to find peers from config...")
     while True:
       for peer_id, peer_config in self.peers_in_network.items():
         if DEBUG_DISCOVERY >= 2: print(f"Checking peer {peer_id=} at {peer_config.address}:{peer_config.port}")
         peer = self.known_peers.get(peer_id)
         if not peer:
           if DEBUG_DISCOVERY >= 2: print(f"{peer_id=} not found in known peers. Adding.")
-          new_peer_handle = self.create_peer_handle(peer_id, peer_config.address, peer_config.device_capabilities)
-          print(new_peer_handle)
+          new_peer_handle = self.create_peer_handle(peer_id, f"{peer_config.address}:{peer_config.port}", peer_config.device_capabilities)
           self.known_peers[peer_id] = new_peer_handle
-        elif peer and not await peer.health_check():
-          if DEBUG >= 1: print(f"{peer_id=} at {peer_config.address} not healthy. Removing.")
-          del self.known_peers[peer_id]
-        else:
-          if DEBUG >= 1: print(f"{peer_id=} at {peer_config.address} is healthy.")
+          peer = new_peer_handle
 
-      print(self.known_peers)
+        is_healthy = await peer.health_check()
+        if not is_healthy:
+          if DEBUG_DISCOVERY >= 2: print(f"{peer_id=} at {peer_config.address}:{peer_config.port} is not healthy. Removing.")
+          del self.known_peers[peer_id]
+        elif DEBUG_DISCOVERY >= 2: print(f"{peer_id=} at {peer_config.address}:{peer_config.port} is healthy.")
+
+        if DEBUG_DISCOVERY >= 2: print(f"Current known peers: {[peer.id() for peer in self.known_peers.values()]}")
 
       await asyncio.sleep(self.broadcast_interval)

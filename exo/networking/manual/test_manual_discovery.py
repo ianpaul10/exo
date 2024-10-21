@@ -10,20 +10,15 @@ from exo.orchestration.node import Node
 root_path = "./exo/networking/manual/test_data/test_config.json"
 
 
-@unittest.skip("Skipping test for now")
 class TestSingleNodeManualDiscovery(unittest.IsolatedAsyncioTestCase):
   async def asyncSetUp(self):
     self.peer1 = mock.AsyncMock()
     self.peer1.connect = mock.AsyncMock()
     self.discovery1 = ManualDiscovery(root_path, "node1", create_peer_handle=lambda peer_id, address, device_capabilities: self.peer1)
-    print("SETUP")
     x = self.discovery1.start()
-    print("DISCOVERY1 FINISHED")
 
   async def asyncTearDown(self):
-    print("TEARDOWN")
     await self.discovery1.stop()
-    print("TEARDOWN FINISHED")
 
   async def test_discovery(self):
     print("START TEST")
@@ -31,11 +26,9 @@ class TestSingleNodeManualDiscovery(unittest.IsolatedAsyncioTestCase):
     assert len(peers1) == 0
     print("END TEST")
 
-    # connect has to be explicitly called after discovery
     self.peer1.connect.assert_not_called()
 
 
-@unittest.skip("Skipping test for now")
 class TestManualDiscovery(unittest.IsolatedAsyncioTestCase):
   async def asyncSetUp(self):
     self.peer1 = mock.AsyncMock()
@@ -69,7 +62,6 @@ class TestManualDiscovery(unittest.IsolatedAsyncioTestCase):
     self.peer2.connect.assert_not_called()
 
 
-# @unittest.skip("Skipping test for now")
 class TestManualDiscoveryWithGRPCPeerHandle(unittest.IsolatedAsyncioTestCase):
   async def asyncSetUp(self):
     config = NetworkTopology.from_path(root_path)
@@ -103,20 +95,24 @@ class TestManualDiscoveryWithGRPCPeerHandle(unittest.IsolatedAsyncioTestCase):
     assert len(peers1) == 1
     peers2 = await self.discovery2.discover_peers(wait_for_peers=1)
     assert len(peers2) == 1
-    assert not await peers1[0].is_connected()
-    assert not await peers2[0].is_connected()
 
     # Connect
     await peers1[0].connect()
     await peers2[0].connect()
-    assert await peers1[0].is_connected()
-    assert await peers2[0].is_connected()
+    self.assertTrue(await peers1[0].is_connected())
+    self.assertTrue(await peers2[0].is_connected())
 
     # Kill server1
     await self.server1.stop()
 
-    assert await peers1[0].is_connected()
-    assert not await peers2[0].is_connected()
+    self.assertTrue(await peers1[0].is_connected())
+    self.assertFalse(await peers2[0].is_connected())
+
+    # Kill server2
+    await self.server2.stop()
+
+    self.assertFalse(await peers1[0].is_connected())
+    self.assertFalse(await peers2[0].is_connected())
 
 
 if __name__ == "__main__":
